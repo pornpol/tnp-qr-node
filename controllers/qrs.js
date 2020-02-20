@@ -146,7 +146,13 @@ exports.createQrsPdf = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    count: 0
+    data: `${qrs[0].name
+      .replace(/\s+/g, '')
+      .replace('/', '_')
+      .trim()}-${qrs[qrs.length - 1].name
+      .replace(/\s+/g, '')
+      .replace('/', '_')
+      .trim()}.pdf`
   });
 });
 
