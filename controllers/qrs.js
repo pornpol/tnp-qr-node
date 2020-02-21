@@ -15,15 +15,20 @@ const Qr = require('../models/Qr');
 // @route   GET /api/v1/qrs
 // @access  Public
 exports.getQrs = asyncHandler(async (req, res, next) => {
-  if (!req.body.limit) req.body.limit = 1000;
+  if (!req.query.start) req.query.start = 1;
+  if (!req.query.end) req.query.end = req.query.start + 1000 - 1;
 
   const total = await Qr.countDocuments();
-  const qrs = await Qr.find(null, null, req.body);
+  const qrs = await Qr.find(null, null, {
+    skip: req.query.start - 1,
+    limit: req.query.end - req.query.start + 1
+  });
 
   res.status(200).json({
     success: true,
     total,
-    start: req.body.skip + 1,
+    start: req.query.start,
+    end: req.query.end,
     count: qrs.length,
     data: qrs
   });
@@ -49,9 +54,12 @@ exports.getPdfs = asyncHandler(async (req, res, next) => {
 
   const itemsFilter = items.filter(item => item.split('.').pop() === 'pdf');
 
-  const itemsLink = itemsFilter.map(
-    item => `${req.protocol}://${req.get('host')}/pdfs/${item}`
-  );
+  const itemsLink = itemsFilter.map(item => {
+    return {
+      name: item,
+      link: `${req.protocol}://${req.get('host')}/pdfs/${item}`
+    };
+  });
 
   res.status(200).json({
     success: true,
@@ -61,7 +69,7 @@ exports.getPdfs = asyncHandler(async (req, res, next) => {
 });
 
 // @des     Delete All Pdfs
-// @route   DELETE/api/v1/qrs
+// @route   DELETE /api/v1/qrs/pdfs
 // @access  Private
 exports.deletePdfs = asyncHandler(async (req, res, next) => {
   fsExtra.emptyDirSync(process.env.FILE_PDF_PATH);
@@ -74,7 +82,7 @@ exports.deletePdfs = asyncHandler(async (req, res, next) => {
 });
 
 // @des     Get Pdfs zip
-// @route   GET /api/v1/qrs/pdfs/zip
+// @route   GET /api/v1/qrs/zip
 // @access  Public
 exports.getPdfsZip = asyncHandler(async (req, res, next) => {
   // creating archives
@@ -92,7 +100,13 @@ exports.getPdfsZip = asyncHandler(async (req, res, next) => {
 // @route   POST /api/v1/qrs
 // @access  Private
 exports.createQrsPdf = asyncHandler(async (req, res, next) => {
-  const qrs = await Qr.find();
+  if (!req.body.start) req.body.start = 1;
+  if (!req.body.end) req.body.end = req.body.start + 1000 - 1;
+
+  const qrs = await Qr.find(null, null, {
+    skip: req.body.start - 1,
+    limit: req.body.end - req.body.start + 1
+  });
 
   if (!qrs || qrs.length === 0) {
     return next(ErrorResponse('No Qr data', 400));
@@ -117,13 +131,7 @@ exports.createQrsPdf = asyncHandler(async (req, res, next) => {
   // See below for browser usage
   doc.pipe(
     fs.createWriteStream(
-      `${process.env.FILE_PDF_PATH}/${qrs[0].name
-        .replace(/\s+/g, '')
-        .replace('/', '_')
-        .trim()}-${qrs[qrs.length - 1].name
-        .replace(/\s+/g, '')
-        .replace('/', '_')
-        .trim()}.pdf`
+      `${process.env.FILE_PDF_PATH}/${req.body.start}-${req.body.end}.pdf`
     )
   );
 
@@ -154,13 +162,7 @@ exports.createQrsPdf = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    data: `${qrs[0].name
-      .replace(/\s+/g, '')
-      .replace('/', '_')
-      .trim()}-${qrs[qrs.length - 1].name
-      .replace(/\s+/g, '')
-      .replace('/', '_')
-      .trim()}.pdf`
+    data: `${req.body.start}-${req.body.end}.pdf`
   });
 });
 

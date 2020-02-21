@@ -2,6 +2,7 @@ const express = require('express');
 const dotenv = require('dotenv');
 const colors = require('colors');
 const path = require('path');
+const cors = require('cors');
 const fileupload = require('express-fileupload');
 const errorHandler = require('./middlewares/error');
 const connectDB = require('./config/db');
@@ -23,6 +24,7 @@ const qrsRouter = require('./routes/qrs');
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(fileupload());
 
