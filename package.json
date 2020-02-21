@@ -4,7 +4,7 @@
   "description": "TanaPress QR Code Generator API",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon --stack-size=200000 server.js"
+    "dev": "nodemon server.js"
   },
   "author": "9pol",
   "license": "MIT",

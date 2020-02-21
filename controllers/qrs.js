@@ -1,6 +1,3 @@
-const ErrorResponse = require('../utils/errorResponse');
-const asyncHandler = require('../middlewares/async');
-
 const xlsx = require('node-xlsx');
 const QRCode = require('qrcode-svg');
 const PDFDocument = require('pdfkit');
@@ -9,17 +6,26 @@ const fs = require('fs');
 const fsExtra = require('fs-extra');
 const admZip = require('adm-zip');
 
+const ErrorResponse = require('../utils/errorResponse');
+const asyncHandler = require('../middlewares/async');
+
 const Qr = require('../models/Qr');
 
 // @des     Get Qrs list
 // @route   GET /api/v1/qrs
 // @access  Public
 exports.getQrs = asyncHandler(async (req, res, next) => {
-  const qrs = await Qr.countDocuments();
+  if (!req.body.limit) req.body.limit = 1000;
+
+  const total = await Qr.countDocuments();
+  const qrs = await Qr.find(null, null, req.body);
 
   res.status(200).json({
     success: true,
-    count: qrs
+    total,
+    start: req.body.skip + 1,
+    count: qrs.length,
+    data: qrs
   });
 });
 
@@ -41,12 +47,16 @@ exports.deleteQrs = asyncHandler(async (req, res, next) => {
 exports.getPdfs = asyncHandler(async (req, res, next) => {
   const items = await fs.readdirSync(process.env.FILE_PDF_PATH);
 
-  console.log(items);
+  const itemsFilter = items.filter(item => item.split('.').pop() === 'pdf');
+
+  const itemsLink = itemsFilter.map(
+    item => `${req.protocol}://${req.get('host')}/pdfs/${item}`
+  );
 
   res.status(200).json({
     success: true,
-    count: items.length,
-    data: items
+    count: itemsLink.length,
+    data: itemsLink
   });
 });
 
@@ -71,13 +81,11 @@ exports.getPdfsZip = asyncHandler(async (req, res, next) => {
   const zip = new admZip();
 
   zip.addLocalFolder(process.env.FILE_PDF_PATH);
-  // or write everything to disk
-  zip.writeZip(`${process.env.FILE_PDF_PATH}/all-file.zip`);
 
-  res.status(200).json({
-    success: true,
-    data: `all-file.zip`
-  });
+  // get everything as a buffer
+  const willSendthis = zip.toBuffer();
+
+  res.contentType('zip').send(willSendthis);
 });
 
 // @des     Create Qr pdf file

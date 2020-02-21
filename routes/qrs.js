@@ -6,7 +6,8 @@ const {
   getPdfs,
   deleteQrs,
   createQrsPdf,
-  getPdfsZip
+  getPdfsZip,
+  deletePdfs
 } = require('../controllers/qrs');
 
 const router = express.Router({ mergeParams: true });
@@ -14,12 +15,15 @@ const router = express.Router({ mergeParams: true });
 router
   .route('/')
   .get(getQrs)
-  .delete(deleteQrs)
-  .post(createQrsPdf);
+  .delete(deleteQrs);
 
-router.route('/pdfs').get(getPdfs);
+router
+  .route('/pdfs')
+  .get(getPdfs)
+  .post(createQrsPdf)
+  .delete(deletePdfs);
 
-router.route('/pdfs/zip').get(getPdfsZip);
+router.route('/zip').get(getPdfsZip);
 
 router.route('/excels').post(uploadQrExcel);
 

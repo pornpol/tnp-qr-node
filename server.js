@@ -5,8 +5,17 @@ const path = require('path');
 const fileupload = require('express-fileupload');
 const errorHandler = require('./middlewares/error');
 const connectDB = require('./config/db');
+const fs = require('fs');
 
 dotenv.config({ path: './config/config.env' });
+
+if (!fs.existsSync('./public')) {
+  fs.mkdirSync('./public');
+}
+
+if (!fs.existsSync('./public/pdfs')) {
+  fs.mkdirSync('./public/pdfs');
+}
 
 connectDB();
 
