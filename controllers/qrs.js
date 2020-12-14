@@ -152,7 +152,7 @@ exports.createQrsPdf = asyncHandler(async (req, res, next) => {
     doc
       .font('Courier')
       .fontSize(14)
-      .text(qr.code.trim(), 25, 215);
+      .text(qr.code.trim().padStart(19), 5, 215);
 
     if (index < qrs.length - 1) doc.addPage();
   });
