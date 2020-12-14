@@ -150,11 +150,12 @@ exports.createQrsPdf = asyncHandler(async (req, res, next) => {
 
     // // // Embed a font, set the font size, and render some text
     const pad = qr.code.trim().length + ((20 - qr.code.trim().length)/2)
-
+    const start = pad % 1 === 0 ? 22 : 25;
+    console.log(pad, start);
     doc
       .font('Courier')
       .fontSize(14)
-      .text(qr.code.trim().padStart(pad), 23, 215);
+      .text(qr.code.trim().padStart(pad), start, 215);
 
     if (index < qrs.length - 1) doc.addPage();
   });
